@@ -1,5 +1,6 @@
+// App.jsx
 import React, { useState, useEffect } from "react";
-import "./App.css"; // Import the CSS file
+import "./style.css"; // Import your CSS styles
 
 const App = () => {
   const [isRedirectEnabled, setIsRedirectEnabled] = useState(false);
@@ -20,7 +21,7 @@ const App = () => {
     setUserRole("Admin"); // Set role dynamically if needed
   }, []);
 
-  // Handle toggle change
+  // Handle toggle change for redirection
   useEffect(() => {
     if (isRedirectEnabled) {
       window.location.href = "another_page.html"; // Change to desired page
@@ -129,56 +130,56 @@ const App = () => {
       </div>
 
       {/* 🔹 Modal */}
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <span>Movie Information</span>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)}>
-                ✖
-              </button>
+      {/* 🔹 Modal */}
+<div className={`modal-overlay ${isModalOpen ? "show" : ""}`}>
+  <div className="modal">
+    <div className="modal-header">
+      <span>Movie Information</span>
+      <button className="close-btn" onClick={() => setIsModalOpen(false)}>
+        ✖
+      </button>
+    </div>
+    <div className="modal-content">
+      <div className="modal-left">
+        <h3>About This Entry</h3>
+        <p>Please provide complete movie details on the right side.</p>
+      </div>
+      <div className="modal-right">
+        <form onSubmit={handleSubmit}>
+          {[
+            ["season", "Season (e.g., 01)"],
+            ["language", "Language (e.g., English)"],
+            ["episode", "Episode (e.g., Second)"],
+            ["director", "Director (e.g., Robert Anderson)"],
+            ["fav", "Fav (e.g., 1234)"],
+            ["noOfMovies", "No. of Movies (e.g., 233)"],
+            ["reason", "Reason"],
+          ].map(([name, placeholder]) => (
+            <div key={name} className="form-group">
+              <input
+                type={name === "noOfMovies" ? "number" : "text"}
+                name={name}
+                placeholder={placeholder}
+                value={formData[name]}
+                onChange={handleInputChange}
+                required
+              />
             </div>
-            <div className="modal-content">
-              <div className="modal-left">
-                <h3>About This Entry</h3>
-                <p>Please provide complete movie details on the right side.</p>
-              </div>
-              <div className="modal-right">
-                <form onSubmit={handleSubmit}>
-                  {[
-                    ["season", "Season (e.g., 01)"],
-                    ["language", "Language (e.g., English)"],
-                    ["episode", "Episode (e.g., Second)"],
-                    ["director", "Director (e.g., Robert Anderson)"],
-                    ["fav", "Fav (e.g., 1234)"],
-                    ["noOfMovies", "No. of Movies (e.g., 233)"],
-                    ["reason", "Reason"],
-                  ].map(([name, placeholder]) => (
-                    <div key={name} className="form-group">
-                      <input
-                        type={name === "noOfMovies" ? "number" : "text"}
-                        name={name}
-                        placeholder={placeholder}
-                        value={formData[name]}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                  ))}
-                  <div className="form-actions">
-                    <button type="button" className="cancel-btn" onClick={() => setIsModalOpen(false)}>
-                      Cancel
-                    </button>
-                    <button type="submit" className="submit-btn">
-                      Submit
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
+          ))}
+          <div className="form-actions">
+            <button type="button" className="cancel-btn" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </button>
+            <button type="submit" className="submit-btn">
+              Submit
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
     </div>
   );
 };

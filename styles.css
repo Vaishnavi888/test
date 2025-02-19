@@ -1,0 +1,154 @@
+/* General Styling */
+body {
+  background: black;
+  color: black;
+  font-family: Arial, sans-serif;
+}
+
+.navbar {
+  background: #1a1a2e;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+button {
+  background: #007bff;
+  color: white;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Request Form Styling */
+.request-form-container {
+  text-align: center;
+  padding: 20px;
+  color: white;
+}
+
+.open-form-button-container {
+  margin: 20px auto;
+}
+
+.open-form-button-container button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.form-box {
+  background: white;
+  color: black;
+  max-width: 500px;
+  margin: 20px auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-box-header {
+  background: #003366;
+  color: white;
+  padding: 10px;
+  text-align: left;
+}
+
+.form-content {
+  padding: 20px;
+  text-align: left;
+}
+
+.form-content input,
+.form-content textarea,
+.form-content select {
+  width: 100%;
+  margin: 10px 0;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form-content button {
+  background: #007bff;
+  color: white;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* --- Session Details Page Styling --- */
+.session-details-container {
+  text-align: center;
+  padding: 20px;
+  color: white;
+}
+
+.session-details-container h1 {
+  margin-bottom: 10px;
+}
+
+.session-details-container p {
+  margin-bottom: 20px;
+}
+
+/* Container for session cards */
+.session-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* Styling for each session card */
+.session-card {
+  background: white;
+  color: black;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 300px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.session-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Card header styling */
+.session-card-header {
+  background: #003366;
+  color: white;
+  padding: 15px;
+  text-align: left;
+}
+
+/* Card body styling */
+.session-card-body {
+  padding: 15px;
+  text-align: left;
+}
+
+/* PPT link styling */
+.session-ppt-link {
+  display: inline-block;
+  margin-top: 10px;
+  background: #007bff;
+  color: white;
+  padding: 8px 12px;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.session-ppt-link:hover {
+  background: #0056b3;
+}

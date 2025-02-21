@@ -602,4 +602,222 @@ spec:
    kubectl apply -f h2-db.yaml
    ```
 
-Now, your **H2 database is persistent** and available even after restarts. 🚀
+3. Persistent Storage for H2 Database
+H2 must persist data even if pods restart. Use Persistent Volume (PV) and Persistent Volume Claim (PVC).
+
+h2-pv.yaml
+yaml
+Copy
+Edit
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: h2-pv
+  namespace: dev
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/h2db"  # Local storage for dev (Change for production)
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: h2-pvc
+  namespace: dev
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+Apply it:
+
+sh
+Copy
+Edit
+kubectl apply -f h2-pv.yaml
+4. Deploy H2 Database as a Pod
+Run H2 in a separate pod with the mounted volume.
+
+h2-db.yaml
+yaml
+Copy
+Edit
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: h2-db
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: h2-db
+  template:
+    metadata:
+      labels:
+        app: h2-db
+    spec:
+      containers:
+        - name: h2-container
+          image: oscarfonts/h2
+          ports:
+            - containerPort: 8082
+          volumeMounts:
+            - mountPath: "/data"
+              name: h2-volume
+      volumes:
+        - name: h2-volume
+          persistentVolumeClaim:
+            claimName: h2-pvc
+Apply it:
+
+sh
+Copy
+Edit
+kubectl apply -f h2-db.yaml
+5. Create ConfigMap for Environment Variables
+This stores database configurations for Spring Boot.
+
+configmap.yaml
+yaml
+Copy
+Edit
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spring-config
+  namespace: dev
+data:
+  SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/officehoursdb"
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.h2.Driver"
+  SPRING_DATASOURCE_USERNAME: "sa"
+  SPRING_DATASOURCE_PASSWORD: ""
+  SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.H2Dialect"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+Apply it:
+
+sh
+Copy
+Edit
+kubectl apply -f configmap.yaml
+6. Deploy Spring Boot Application
+Define the Spring Boot App Deployment with a reference to h2-db.
+
+springboot-deployment.yaml
+yaml
+Copy
+Edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springboot-app
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: springboot-app
+  template:
+    metadata:
+      labels:
+        app: springboot-app
+    spec:
+      containers:
+        - name: springboot-container
+          image: your-dockerhub-username/officehours-app:latest  # Replace with your image
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: spring-config
+          volumeMounts:
+            - mountPath: "/data"
+              name: h2-volume
+      volumes:
+        - name: h2-volume
+          persistentVolumeClaim:
+            claimName: h2-pvc
+Apply it:
+
+sh
+Copy
+Edit
+kubectl apply -f springboot-deployment.yaml
+7. Expose Services
+Expose Spring Boot App & H2 Database as services.
+
+service.yaml
+yaml
+Copy
+Edit
+apiVersion: v1
+kind: Service
+metadata:
+  name: springboot-service
+  namespace: dev
+spec:
+  selector:
+    app: springboot-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer  # Change to ClusterIP if using internally
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: h2-service
+  namespace: dev
+spec:
+  selector:
+    app: h2-db
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: 8082
+  type: ClusterIP  # Internal service
+Apply it:
+
+sh
+Copy
+Edit
+kubectl apply -f service.yaml
+8. Deployment Steps
+Build & Push Docker Image
+
+sh
+Copy
+Edit
+mvn clean package
+docker build -t your-dockerhub-username/officehours-app:latest .
+docker push your-dockerhub-username/officehours-app:latest
+Apply Kubernetes Files
+
+sh
+Copy
+Edit
+kubectl apply -f namespace.yaml
+kubectl apply -f h2-pv.yaml
+kubectl apply -f h2-db.yaml
+kubectl apply -f configmap.yaml
+kubectl apply -f springboot-deployment.yaml
+kubectl apply -f service.yaml
+Verify Deployment
+
+sh
+Copy
+Edit
+kubectl get pods -n dev
+kubectl get svc -n dev
+Access H2 Console
+
+Open http://localhost:8082 (if port-forwarding)
+JDBC URL: jdbc:h2:file:/data/officehoursdb
+Username: sa
+Password: (leave empty)
+

@@ -437,3 +437,169 @@ spec:
    kubectl apply -f h2-pv.yaml
    kubectl apply -f h2-db.yaml
    ```
+
+
+
+
+
+
+
+
+
+
+
+deployment action steps : 
+You can define the H2 database schema using **JPA Entities** with Hibernate in Spring Boot. When using **Spring Data JPA**, Hibernate automatically creates tables based on entity classes if `spring.jpa.hibernate.ddl-auto` is set to `update` or `create-drop`.
+
+---
+
+## **1. Define H2 Database Schema in `schema.sql` (Optional)**
+If you want to explicitly define tables and columns in an H2 `.sql` file, create `src/main/resources/schema.sql`:
+
+```sql
+CREATE TABLE IF NOT EXISTS request (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    details TEXT NOT NULL,
+    request_type VARCHAR(50) NOT NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'Pending'
+);
+```
+
+This ensures the table is created if Hibernate doesn't handle it automatically.
+
+---
+
+## **2. JPA Entity for the `request` Table**
+Spring Boot will automatically create this table if `spring.jpa.hibernate.ddl-auto=update` is set.
+
+### **`Request.java`**
+```java
+package com.example.officehours.model;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
+@Entity
+@Table(name = "request")  // Ensures it maps to the correct table
+@Data
+public class Request {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "user_id", nullable = false)
+    private String userId;
+
+    @Column(name = "details", columnDefinition = "TEXT", nullable = false)
+    private String details;
+
+    @Column(name = "request_type", length = 50, nullable = false)
+    private String requestType;
+
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
+    private String content;
+
+    @Column(name = "status", length = 50, nullable = false, columnDefinition = "VARCHAR(50) DEFAULT 'Pending'")
+    private String status = "Pending";
+}
+```
+
+---
+
+## **3. Configure H2 Database for Persistence**
+In **`application.properties`**, set the database to store data in a file (`/data/officehoursdb`), ensuring persistence.
+
+```properties
+# H2 Database Configuration (File-Based Storage)
+spring.datasource.url=jdbc:h2:file:/data/officehoursdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.h2.console.enabled=true
+spring.jpa.hibernate.ddl-auto=update  # Ensures table creation if missing
+```
+
+### **Access H2 Console (For Debugging)**
+H2 provides a web interface to inspect the database. Run your Spring Boot app and visit:
+
+```
+http://localhost:8080/h2-console
+```
+- **JDBC URL:** `jdbc:h2:file:/data/officehoursdb`
+- **Username:** `sa`
+- **Password:** (leave empty)
+
+---
+
+## **4. H2 Persistent Volume in Kubernetes**
+To ensure the database file remains intact after pod restarts, deploy **H2 Database with Persistent Volume**.
+
+### **H2 Persistent Volume (`h2-pv.yaml`)**
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: h2-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/h2db"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: h2-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+### **H2 Database Pod (`h2-db.yaml`)**
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: h2-db
+spec:
+  containers:
+    - name: h2-container
+      image: oscarfonts/h2
+      ports:
+        - containerPort: 8082
+      volumeMounts:
+        - mountPath: "/data"
+          name: h2-volume
+  volumes:
+    - name: h2-volume
+      persistentVolumeClaim:
+        claimName: h2-pvc
+```
+
+---
+
+### **Final Steps**
+1. **Start Spring Boot App**
+   ```sh
+   mvn spring-boot:run
+   ```
+2. **Verify Table Creation**
+   - Open **http://localhost:8080/h2-console**
+   - Connect using `jdbc:h2:file:/data/officehoursdb`
+   - Run `SELECT * FROM request;`
+
+3. **Deploy to Kubernetes**
+   ```sh
+   kubectl apply -f h2-pv.yaml
+   kubectl apply -f h2-db.yaml
+   ```
+
+Now, your **H2 database is persistent** and available even after restarts. 🚀
